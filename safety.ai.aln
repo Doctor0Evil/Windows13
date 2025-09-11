@@ -1,0 +1,11 @@
+aln!
+policy.audit --scope "ai,humankind,nanotech" --fairness "enforce" --contestable "always"
+consent.dual --hardware_change "review" --never_ban "permanent" --appeal "enabled"
+workflow.fail_open --sandbox "gaming" --real_world "isolated"
+audit.safety --logs "contestable,modular,visible"
+expression.filter --min_harm "active" --speech_lock "never"
+autonomy.governance --updates "appealable" --policy "inclusive"
+communication.sandbox --mode "federated,dual-reviewed"
+identity.protect --consent "revocable" --privileges "dual-review"
+access.control --entity "ai,human,cybernetic" --status "equal,reviewed"
+shield.feature --prevent_escalation "active" --bar_raise "disabled"
