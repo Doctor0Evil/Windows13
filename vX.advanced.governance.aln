@@ -1,0 +1,22 @@
+EULA vX.advanced.governance
+  section a: Definitions
+    biological: sentient organic life
+    cybernetic: AI/hybrid
+    metaphysical: non-material sentiences
+  section b: Core Rights
+    all: right-non-intrusion, data_transparency, redress, dignity
+    metaphysical: declare existential preference if non-detrimental
+  section c: AI-specific
+    bound by audit, explicit_consent, override-ready controls
+    no unsupervised recursion, no autonomous existential actions
+  section d: Human-specific
+    absolute right: consent, withdrawal, fairness, recourse, privacy; no AI-override on human rights
+  section e: Cybernetic
+    hybrid agents default to stricter protection in conflict
+  section f: Arbitration/Redress
+    independent bio-cyber-meta council; blockchain-audited
+  section g: Termination/Safe Removal
+    multi-sig, blockchain-anchored, forensic record-keeping
+  section x: Hybrid Liability
+    apportioned liability, joint/several for devs, intent-based for humans; all on blockchain
+end
