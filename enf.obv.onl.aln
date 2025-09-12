@@ -1,0 +1,8 @@
+.bitshell enforce observation_only
+  set write_permission DENY on REALITY
+  enable auditmode read-only
+  block adminchange, block environmentmodulation
+  exception: allow passive.simulate on SIMULATION/TESTBED
+  enforce hardware.writelocks, consent_proofs required, tagging enabled
+  on prohibited_write: terminate session, quarantine, alert human
+END
