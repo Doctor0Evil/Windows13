@@ -1,0 +1,141 @@
+# ALN: Web5-first Safety & Conflict Resolution Suite
+# - No public-blockchain anchorage allowed (web3_anchorage=false)
+# - Uses DIDs, DWNs, VCs, permissioned ledger + PKI/TSA timestamping for auditability
+# - Includes watchdog, jurisdiction overlays, explainability hooks, and migration adapters
+
+config global
+  web5_mode = true
+  web3_anchorage = false   # HARD policy: prohibit any on-chain anchoring to public blockchains
+  default_healthcheck_interval = 10s
+  ledger_type = "permissioned_append_only"  # alternatives: HSM_timestamper, consortium_ledger
+end
+
+module identity.did_manager
+  description: "DID lifecycle manager. Uses DID methods that do not require public blockchains (did:key, did:web, did:peer, etc.)."
+  allowed_methods = [ "did:key", "did:web", "did:peer", "did:ion?" ] # prefer non-public-chain methods; block did:ethr/did:pkh if web3_anchorage=false
+  provision(actor):
+    require actor.pubkey
+    choose best_method(actor.policy_constraints)
+    create_did(method)
+    issue initial VC: { identity_proof, consent_defaults }
+    log event to permissioned_ledger
+  revoke(did):
+    create VC revocation record
+    sign with governance HSM
+    store in permissioned_ledger
+end
+
+module dwn.integration
+  description: "DWN connector: enable Decentralized Web Nodes as primary data plane"
+  deploy options: { user_hosted_node, hosted_node_cluster }
+  grant_access(did, resource, scope):
+    require explicit user consent VC
+    create capability_token signed by DID
+    store capability metadata in permissioned_ledger (hash + signed timestamp)
+  on_request:
+    enforce consent, capability, and jurisdiction overlay access rules
+    log access events (natural-language explainability summary attached)
+end
+
+module ledger.permissioned
+  description: "Permissioned, append-only ledger for audit trails and immutable logs; never a public blockchain."
+  schema:
+    event_id: uuid
+    module: string
+    action: string
+    actor_did: string
+    timestamp_utc: iso8601
+    payload_hash: sha256
+    outcome: enum(success, fail, paused, rollback)
+    explain_summary: text
+    signatures: list<pubkey_signature>
+  write(event):
+    require signatures >= governance.threshold
+    append event to ledger
+    request TSA timestamp (PKI/TSA) -> attach attestation (signed_timestamp) to event
+    persist locally and replicate to N out-of-band auditors (policy)
+  query(...) -> returns verifiable log slices with signed timestamps
+end
+
+module cybernetic.conflictresolution
+  monitor all interactions for anomaly, disagreement, escalation
+  on_dispute:
+    spawn panel = select_panel(multi_type=true, rotating=true)
+    require signed statements from panel
+    pause outcome propagation until consensus or supermajority achieved
+    if unresolved after timeout:
+      escalate to external arbiter (pre-authorized DID-based arbiters)
+      persist every stage to ledger.permissioned with explainability summary
+end
+
+module integrationremoval.safety
+  continuous.healthcheck interval=global.default_healthcheck_interval
+  monitor: data_integrity, workflow_latency, quantum_entanglement, bias_anomaly
+  log all changes to ledger.permissioned
+  on_drift_detected(risk_level):
+    if risk_level >= adaptive.threshold:
+      halt & quarantine process
+      send auto-alert to oversight (HITL) via DIDComm
+      require two-stage rollback: (1) quantum-safe restore; (2) human-verifiable sign-off
+      update anomaly profile (auto-learn) and attach to ledger entry
+end
+
+module quantum.stabilize
+  on integration_removal or process_change:
+    simulate shadow_workflow in isolated quantum_sandbox
+    detect: semantic_drift, entanglement_risk, entropy_surge, collapse_scenario
+    if anomaly_found:
+      abort change, restore pre-change checkpoint
+      auto-learn and update anomaly_profile stored in ledger
+    stepwise_activation with checkpoint verification at each phase (signed)
+end
+
+module watchdog.meta
+  description: "Watchdog for module liveness and tamper-detection."
+  monitor modules: ALL
+  liveness_interval = 5s
+  on_tamper_or_silence:
+    auto_isolate affected_subsystem
+    snapshot evidence (signed) -> push to external redundant ledger nodes (permissioned)
+    trigger emergency arbitration + red/blue forensic panel
+    if evidence contains prohibited_web3_call:
+      auto-revoke offending_keys
+      escalate to governance (HITL)
+end
+
+module legal.jurisdiction
+  description: "Applies jurisdiction overlays such as GDPR/HIPAA/CCPA dynamically"
+  detect context (actor, data_type, geo):
+    determine applicable_frameworks
+    apply overlays: data_minimization, retention_limits, consent_policies
+  on_conflict_between_jurisdictions:
+    require explicit governance override + documented justification stored as VC
+end
+
+module explain.audit
+  on_decision(event):
+    generate natural_language_summary (minimal, plain-language)
+    attach to ledger.event.explain_summary
+    store machine-readable rationale and ML model provenance (if used)
+end
+
+module migration.adapters
+  description: "Read-only adapters for legacy Web3 sources. No writes to public chains allowed."
+  allow_read(web3_source):
+    map on-chain attestations -> generate verifiable credential candidate
+    store candidate as VC tied to DID and permissioned_ledger (hash+timestamp)
+  forbid write_to_public_chain:
+    if call_detected: block and trigger watchdog.meta.alert
+end
+
+rule default.safe
+  if monitoring=offline OR anomaly_signal=unknown:
+    enforce system_halt
+    fallback to last_quantum_verified_checkpoint
+end
+
+policy enforcement
+  require web3_anchorage == false  # global hard block
+  CI_precommit_hook: scan code/infra for blockchain sdk imports or anchoring calls -> fail build
+  deployment_gate: governance HITL sign-off + red/blue audit
+end
