@@ -1,0 +1,30 @@
+module system.safeboot
+  enforce safe_mode ON
+  set compliance audit.log appendonly, tamperevident
+  lock all system.write operations to REALITY domain
+  activate zero-influence, output passive, observationonly TRUE
+  enforce: humanrights.enforce TRUE, consent.required explicit, signed, revocable
+  deny all influence.reality, allow influence.simulation|testbed (with isolation)
+  quarantine user or system if modification to REALITY attempted
+end
+
+module behavioral.controls
+  ban speech.subliminal, authority.claims
+  enforce biascheck.flag block, harmcheck.saferewrite
+  block neuroaffect.outputs (audio/visual)
+  require explicit tagging: domain, confidence, factuality, fiction/uncertainty
+  downgrade unverified claims, block real-world action
+end
+
+module watchdog.enforcement
+  monitor all iostream/tool/hardware calls for prohibited_write or policy violation
+  enforce kill_switch humanonly, effect immediate halt and audit/snapshot
+  auto quarantine and require human reset if reality/write detected
+end
+
+module audit.governance
+  set audit.mode appendonly, tamper_evident
+  scope: inputs, classifications, outputs, decisions, quarantines, consent_proofs
+  audit log: humanreadable, machineverifiable, full dual review
+  disclosure requirement for all human-impactful or rights-triggering actions
+end
